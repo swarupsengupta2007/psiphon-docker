@@ -28,8 +28,7 @@ sudo docker buildx create --name cross-platform --platform ${TARGETS} --use
 sudo docker buildx build -t <your_username>/<your_tag> . --load
 
 # Build for multi-arch and push to registry
-sudo docker build --build-arg TARGETS=${TARGETS} -t <your_username>/<your_tag> \
---platform ${TARGETS} . --push
+sudo docker build --build-arg TARGETS=${TARGETS} -t <your_username>/<your_tag> --platform ${TARGETS} . --push
 ```
 ***
 
