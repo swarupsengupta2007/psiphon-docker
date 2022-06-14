@@ -1,0 +1,14 @@
+#/bin/sh
+
+export EUID=${PUID:-1000}
+export EGID=${PGID:-1000}
+addgroup -g $EGID psi
+adduser -u $EUID -G psi -D -H psi
+
+[[ ! -f /config/psiphon.config ]] && cp /psiphon/psiphon.config /config/
+[[ ! -d /config/osl ]] && mkdir /config/osl
+[[ ! -d /config/remote_server_list ]] && mkdir /config/remote_server_list
+
+chown -R psi:psi /config/
+
+su psi -c 'exec /psiphon/psiphon -config /config/psiphon.config'
