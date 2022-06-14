@@ -34,7 +34,7 @@ sudo docker build --build-arg TARGETS=${TARGETS} -t <your_username>/<your_tag> \
 ***
 
 ## To run using docker-compose (recommended): <br>
-```
+```yaml
 version: "3.5"
 services:
   psiphon:
