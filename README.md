@@ -7,6 +7,11 @@ This docker image runs the ConsoleClient from the [psiphon-tunnel-core](https://
 
 This build uses `docker buildx` plugin with `docker-container` driver.
 
+```
+# Clone this repo
+git clone https://github.com/swarupsengupta2007/psiphon-docker
+```
+
 ## Installation Steps<br>
 
 1. Ensure buildx is enabled for docker
