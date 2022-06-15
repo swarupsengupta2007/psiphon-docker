@@ -7,7 +7,7 @@ This docker image runs the ConsoleClient from the [psiphon-tunnel-core](https://
 
 This build uses `docker buildx` plugin with `docker-container` driver.
 
-```
+```bash
 # Clone this repo
 git clone https://github.com/swarupsengupta2007/psiphon-docker
 ```
@@ -17,7 +17,7 @@ git clone https://github.com/swarupsengupta2007/psiphon-docker
 1. Ensure buildx is enabled for docker
 2. Create a builder instance for multi-arch
 3. Build docker image for current platform or multi-arch
-```
+```bash
 # choose target platforms
 TARGETS="linux/amd64,linux/386,linux/arm64,linux/arm"
 
@@ -34,7 +34,7 @@ sudo docker buildx build --build-arg TARGETS=${TARGETS} -t <your_username>/<your
 
 > To change the version of the psiphon add --build-arg VERSION=<version_no><br>
 e.g.
-```
+```bash
 # to build v2.0.22
 sudo docker buildx build --build-arg VERSION=2.0.22 -t <your_username>/<your_tag> . --load
 ```
@@ -60,7 +60,9 @@ services:
 ```
 
 ## Using docker-cli <br>
-`docker run --name psiphon -d -p 8080:8080 -p 1080:1080 -v /home/swarup/psiphon/config/:/config swarupsengupta2007/psiphon`
+```bash
+sudo docker run --name psiphon -d -p 8080:8080 -p 1080:1080 -v /home/swarup/psiphon/config/:/config swarupsengupta2007/psiphon
+```
 
 The following Environment var are available<br>
 |ENV variable|Description|Default|
