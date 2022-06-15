@@ -28,9 +28,17 @@ sudo docker buildx create --name cross-platform --platform ${TARGETS} --use
 sudo docker buildx build -t <your_username>/<your_tag> . --load
 
 # Build for multi-arch and push to registry
-sudo docker build --build-arg TARGETS=${TARGETS} -t <your_username>/<your_tag> \
+sudo docker buildx build --build-arg TARGETS=${TARGETS} -t <your_username>/<your_tag> \
 --platform ${TARGETS} . --push
 ```
+
+> To change the version of the psiphon add --build-arg VERSION=<version_no><br>
+e.g.
+```
+# to build v2.0.22
+sudo docker buildx build --build-arg VERSION=2.0.22 -t <your_username>/<your_tag> . --load
+```
+
 ***
 
 ## To run using docker-compose (recommended): <br>
