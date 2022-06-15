@@ -2,8 +2,11 @@
 
 export EUID=${PUID:-1000}
 export EGID=${PGID:-1000}
-addgroup -g $EGID psi
-adduser -u $EUID -G psi -D -H psi
+if id psi > /dev/null
+then
+	addgroup -g $EGID psi
+	adduser -u $EUID -G psi -D -H psi
+fi
 
 [[ ! -f /config/psiphon.config ]] && cp /psiphon/psiphon.config /config/
 [[ ! -d /config/osl ]] && mkdir /config/osl
@@ -11,4 +14,4 @@ adduser -u $EUID -G psi -D -H psi
 
 chown -R psi:psi /config/
 
-su psi -c 'exec /psiphon/psiphon -config /config/psiphon.config'
+exec /psiphon/psiphon -config /config/psiphon.config
