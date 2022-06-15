@@ -12,7 +12,7 @@ This build uses `docker buildx` plugin with `docker-container` driver.
 git clone https://github.com/swarupsengupta2007/psiphon-docker
 ```
 
-## Installation Steps<br>
+# Building<br>
 
 1. Ensure buildx is enabled for docker
 2. Create a builder instance for multi-arch
@@ -39,9 +39,9 @@ e.g.
 sudo docker buildx build --build-arg VERSION=2.0.22 -t <your_username>/<your_tag> . --load
 ```
 
-***
+# Usage
 
-## To run using docker-compose (recommended): <br>
+## Using docker-compose (recommended): <br>
 ```yaml
 version: "3.5"
 services:
@@ -59,7 +59,7 @@ services:
     restart: unless-stopped
 ```
 
-## To run using docker-cli: <br>
+## Using docker-cli: <br>
 `docker run --name psiphon -d -p 8080:8080 -p 1080:1080 -v /home/swarup/psiphon/config/:/config swarupsengupta2007/psiphon`
 
 The following Environment var are available:<br>
