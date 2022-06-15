@@ -41,7 +41,7 @@ sudo docker buildx build --build-arg VERSION=2.0.22 -t <your_username>/<your_tag
 
 # Usage
 
-## Using docker-compose (recommended): <br>
+## Using docker-compose (recommended) <br>
 ```yaml
 version: "3.5"
 services:
@@ -59,10 +59,10 @@ services:
     restart: unless-stopped
 ```
 
-## Using docker-cli: <br>
+## Using docker-cli <br>
 `docker run --name psiphon -d -p 8080:8080 -p 1080:1080 -v /home/swarup/psiphon/config/:/config swarupsengupta2007/psiphon`
 
-The following Environment var are available:<br>
+The following Environment var are available<br>
 |ENV variable|Description|Default|
 |--|--|--|
 |PUID|The UID for psiphon process|1000|
