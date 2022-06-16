@@ -36,7 +36,7 @@ sudo docker buildx build --build-arg TARGETS=${TARGETS} -t <your_username>/<your
 e.g.
 ```bash
 # to build v2.0.22
-sudo docker buildx build --build-arg VERSION=2.0.22 -t <your_username>/<your_tag> . --load
+sudo docker buildx build --build-arg VERSION=2.0.22 -t <your_tag> . --load
 ```
 
 # Usage
