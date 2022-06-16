@@ -61,7 +61,8 @@ services:
 
 ## Using docker-cli <br>
 ```bash
-sudo docker run --name psiphon -d -p 8080:8080 -p 1080:1080 -v /home/swarup/psiphon/config/:/config swarupsengupta2007/psiphon
+sudo docker run --name psiphon -d -p 8080:8080 -p 1080:1080 \
+-v /home/swarup/psiphon/config/:/config swarupsengupta2007/psiphon
 ```
 
 The following Environment var are available<br>
