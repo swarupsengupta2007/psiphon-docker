@@ -25,7 +25,7 @@ TARGETS="linux/amd64,linux/386,linux/arm64,linux/arm"
 sudo docker buildx create --name cross-platform --platform ${TARGETS} --use  
 
 # Build for current platform and load to docker image
-sudo docker buildx build -t <your_username>/<your_tag> . --load
+sudo docker buildx build -t <your_tag> . --load
 
 # Build for multi-arch and push to registry
 sudo docker buildx build --build-arg TARGETS=${TARGETS} -t <your_username>/<your_tag> \
