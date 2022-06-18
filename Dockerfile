@@ -10,22 +10,23 @@ ENV DIR=/go/src/github.com/Psiphon-Labs/psiphon-tunnel-core \
 		GO111MODULE=off \
 		CGO_ENABLED=0
 SHELL ["/bin/bash", "-c"]
-RUN TARGET_PALTFORMS=${TARGETS:-"$BUILDOS/$BUILDARCH"}; \
-		mkdir -p ${DIR} && \
-		curl -sL https://github.com/Psiphon-Labs/psiphon-tunnel-core/archive/refs/tags/v${VERSION}.tar.gz | tar xz -C ${DIR} --strip-components=1 && \
-		(IFS=','; for PLATFORM in $TARGET_PALTFORMS; \
-		do \
-			OS=${PLATFORM%%/*} 						&& 	\
-			ARCH=${PLATFORM#*/} 					&& 	\
-			ARCH=${ARCH%/*} 							&& 	\
-			VERSION=${PLATFORM##*/} 			&& 	\
-			TARGETVARIANT=${VERSION/$ARCH/}		&& 	\
-			VERSION=${TARGETVER/v/} 			&& 	\
-			GOOS=${OS} GOARCH=${ARCH} go install -a -tags netgo \
-			-ldflags '-w -extldflags "-static"' \
-			github.com/Psiphon-Labs/psiphon-tunnel-core/ConsoleClient && 	\
-			BINARY=$(find /go/bin/* -name "ConsoleClient*") && 	\
-			mv ${BINARY} /go/psiphon_${OS}_${ARCH}_${TARGETVARIANT};	\
+RUN TARGET_PALTFORMS=${TARGETS:-"$BUILDOS/$BUILDARCH"}; 																											\
+		mkdir -p ${DIR} 																																											&&	\
+		curl -sL https://github.com/Psiphon-Labs/psiphon-tunnel-core/archive/refs/tags/v${VERSION}.tar.gz |			 	\
+		tar xz -C ${DIR} --strip-components=1 																																&& 	\
+		(IFS=','; for PLATFORM in $TARGET_PALTFORMS; 																															\
+		do 																																																				\
+			OS=${PLATFORM%%/*} 																																									&& 	\
+			ARCH=${PLATFORM#*/} 																																								&& 	\
+			ARCH=${ARCH%/*} 																																										&& 	\
+			VERSION=${PLATFORM##*/} 																																						&& 	\
+			TARGETVARIANT=${VERSION/$ARCH/}																																			&& 	\
+			VERSION=${TARGETVER/v/} 																																						&& 	\
+			GOOS=${OS} GOARCH=${ARCH} go install -a -tags netgo 																										\
+			-ldflags '-w -extldflags "-static"' 																																		\
+			github.com/Psiphon-Labs/psiphon-tunnel-core/ConsoleClient																						&&	\
+			BINARY=$(find /go/bin/* -name "ConsoleClient*") 																										&& 	\
+			mv ${BINARY} /go/psiphon_${OS}_${ARCH}_${TARGETVARIANT};																								\
 		done)
 
 FROM alpine:3.16.0
