@@ -19,7 +19,7 @@ git clone https://github.com/swarupsengupta2007/psiphon-docker
 3. Build docker image for current platform or multi-arch
 ```bash
 # choose target platforms
-TARGETS="linux/amd64,linux/386,linux/arm64,linux/arm/v7,linux/arm/v6"
+TARGETS="linux/amd64,linux/386,linux/arm64,linux/arm/v7,linux/arm/v6,linux/ppc64le,linux/s390x"
 
 # Create a builder instance
 sudo docker buildx create --name cross-platform --platform ${TARGETS} --use  
