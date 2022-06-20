@@ -19,7 +19,7 @@ git clone https://github.com/swarupsengupta2007/psiphon-docker
 3. Build docker image for current platform or multi-arch
 ```bash
 # choose target platforms
-TARGETS="linux/amd64,linux/386,linux/arm64,linux/arm/v7,linux/arm/v6,linux/ppc64le,linux/s390x"
+TARGETS="linux/amd64,linux/386,linux/arm64,linux/arm/v7,linux/arm/v6"
 
 # Create a builder instance
 sudo docker buildx create --name cross-platform --platform ${TARGETS} --use  
@@ -74,6 +74,6 @@ The following Environment var are available<br>
 Following ports and volumes are available 
 |Option|switch|Description|Default|
 |--|--|--|--|
-|HTTP PORT|-p host_port:8080|http proxy port|8080|
-|SOCKS PORT|-p host_port:1080|socks proxy port|1080|
+|HTTP PORT|-p <host_port>:8080|http proxy port|8080|
+|SOCKS PORT|-p <host_port>:1080|socks proxy port|1080|
 |VOLUME|-v /path/to/config:/config|The container storage|/config|

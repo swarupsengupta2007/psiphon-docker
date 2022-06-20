@@ -10,7 +10,7 @@ ENV DIR=/go/src/github.com/Psiphon-Labs/psiphon-tunnel-core \
 		GO111MODULE=off \
 		CGO_ENABLED=0
 SHELL ["/bin/bash", "-c"]
-RUN TARGET_PALTFORMS=${TARGETS:-"$BUILDOS/$BUILDARCH"};                                                      \
+RUN TARGET_PALTFORMS=${TARGETS:-"$BUILDOS/$BUILDARCH"} &&                                                    \
 		mkdir -p ${DIR}                                                                                       && \
 		curl -sL https://github.com/Psiphon-Labs/psiphon-tunnel-core/archive/refs/tags/v${VERSION}.tar.gz |      \
 		tar xz -C ${DIR} --strip-components=1                                                                 && \
@@ -30,7 +30,7 @@ RUN TARGET_PALTFORMS=${TARGETS:-"$BUILDOS/$BUILDARCH"};                         
 		done)
 
 FROM alpine:3.16.0
-RUN mkdir -p /psiphon /config 
+RUN mkdir -p /psiphon /config
 ARG TARGETOS
 ARG TARGETARCH
 ARG TARGETVARIANT
