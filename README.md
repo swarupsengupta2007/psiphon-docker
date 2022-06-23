@@ -7,6 +7,8 @@ This docker image runs the ConsoleClient from the [psiphon-tunnel-core](https://
 
 This build uses `docker buildx` plugin with `docker-container` driver.
 
+This is built on base image from [swarupsengupta2007/apine-s6-docker](https://github.com/swarupsengupta2007/alpine-s6-docker "swarupsengupta2007/apine-s6-docker")
+
 ```bash
 # Clone this repo
 git clone https://github.com/swarupsengupta2007/psiphon-docker

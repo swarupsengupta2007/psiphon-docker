@@ -29,13 +29,12 @@ RUN TARGET_PALTFORMS=${TARGETS:-"$BUILDOS/$BUILDARCH"} &&                       
 			mv ${BINARY} /go/psiphon_${OS}_${ARCH}_${TARGETVARIANT};                                               \
 		done)
 
-FROM alpine:3.16.0
-RUN mkdir -p /psiphon /config
+FROM swarupsengupta2007/alpine-s6:3.16.0
 ARG TARGETOS
 ARG TARGETARCH
 ARG TARGETVARIANT
-COPY start_psiphon psiphon.config /psiphon/
-COPY --from=psiphon_builder /go/psiphon_${TARGETOS}_${TARGETARCH}_${TARGETVARIANT} /psiphon/psiphon
+COPY base/ /
+COPY psiphon.config ${DEF_DEFAULTS}
+COPY --from=psiphon_builder /go/psiphon_${TARGETOS}_${TARGETARCH}_${TARGETVARIANT} ${DEF_APP}/psiphon
 EXPOSE 8080 1080
 VOLUME /config
-CMD ["/bin/sh", "/psiphon/start_psiphon"]
