@@ -5,9 +5,9 @@ Docker image for Psiphon
 Psiphon is an Internet censorship circumvention system. <br>
 This docker image runs the ConsoleClient from the [psiphon-tunnel-core](https://github.com/Psiphon-Labs/psiphon-tunnel-core "psiphon-tunnel-core").
 
-This build uses `docker buildx` plugin with `docker-container` driver.
-
-This is built on base image from [swarupsengupta2007/apine-s6-docker](https://github.com/swarupsengupta2007/alpine-s6-docker "swarupsengupta2007/apine-s6-docker")
+> This build uses `docker buildx` plugin with `docker-container` driver. <br>
+> Docker image available at [swarupsengupta2007/psiphon](https://hub.docker.com/r/swarupsengupta2007/psiphon "swarupsengupta2007/psiphon"). <br>
+> This is built on base image from [swarupsengupta2007/apine-s6-docker](https://github.com/swarupsengupta2007/alpine-s6-docker "swarupsengupta2007/apine-s6-docker")
 
 ```bash
 # Clone this repo
@@ -23,23 +23,23 @@ git clone https://github.com/swarupsengupta2007/psiphon-docker
 # choose target platforms
 TARGETS="linux/amd64,linux/386,linux/arm64,linux/arm/v7,linux/arm/v6"
 
-# Create a builder instance
-sudo docker buildx create --name cross-platform --platform ${TARGETS} --use  
+# Create a builder instance if it doesn't exist
+sudo docker buildx create --name cross-platform --platform ${TARGETS} --use 
 
 # Build for current platform and load to docker image
 sudo docker buildx build -t <your_tag> . --load
 
-# Build for multi-arch and push to registry
+# build for multi-arch and push to registry
 sudo docker buildx build --build-arg TARGETS=${TARGETS} -t <your_username>/<your_tag> \
 --platform ${TARGETS} . --push
 ```
 
-> To change the version of the psiphon add --build-arg VERSION=<version_no><br>
-e.g.
-```bash
-# to build v2.0.22
-sudo docker buildx build --build-arg VERSION=2.0.22 -t <your_tag> . --load
-```
+Build-args available
+|build-arg|default|Description|
+|--|--|--|
+|VERSION|2.0.23|psiphon-tunnel-core release version|
+|TARGETS|\<BUIDLOS\>/\<BUILDARCH\>|Targets for cross-compilation for the build stage|
+---
 
 # Usage
 
