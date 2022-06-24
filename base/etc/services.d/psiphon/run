@@ -1,6 +1,7 @@
 #!/usr/bin/with-contenv sh
 
 [[ ! -f ${DEF_CONFIG}/psiphon.config ]] && cp ${DEF_DEFAULTS}/psiphon.config ${DEF_CONFIG}/
-[[ ! -d ${DEF_CONFIG}/osl ]] && mkdir ${DEF_CONFIG}/osl
-[[ ! -d ${DEF_CONFIG}/remote_server_list ]] && mkdir ${DEF_CONFIG}/remote_server_list
+
+chown -R ${DEF_USER}:${DEF_USER} ${DEF_CONFIG}
+
 exec s6-setuidgid ${DEF_USER} ${DEF_APP}/psiphon -config ${DEF_CONFIG}/psiphon.config

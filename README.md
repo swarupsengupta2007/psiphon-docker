@@ -24,13 +24,13 @@ git clone https://github.com/swarupsengupta2007/psiphon-docker
 TARGETS="linux/amd64,linux/386,linux/arm64,linux/arm/v7,linux/arm/v6"
 
 # Create a builder instance if it doesn't exist
-sudo docker buildx create --name cross-platform --platform ${TARGETS} --use 
+docker buildx create --name cross-platform --platform ${TARGETS} --use 
 
 # Build for current platform and load to docker image
-sudo docker buildx build -t <your_tag> . --load
+docker buildx build -t <your_tag> . --load
 
 # build for multi-arch and push to registry
-sudo docker buildx build --build-arg TARGETS=${TARGETS} -t <your_username>/<your_tag> \
+docker buildx build --build-arg TARGETS=${TARGETS} -t <your_username>/<your_tag> \
 --platform ${TARGETS} . --push
 ```
 
@@ -63,8 +63,13 @@ services:
 
 ## Using docker-cli <br>
 ```bash
-sudo docker run --name psiphon -d -p 8080:8080 -p 1080:1080 \
--v /home/swarup/psiphon/config/:/config swarupsengupta2007/psiphon
+docker run -d                                  \
+    --name psiphon                             \
+    --restart=unless-stopped                   \
+    -p 8080:8080                               \
+    -p 1080:1080                               \
+    -v /home/swarup/psiphon/config/:/config    \
+    swarupsengupta2007/psiphon
 ```
 
 The following Environment var are available<br>
