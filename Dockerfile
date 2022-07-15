@@ -11,7 +11,7 @@ ENV DIR=/go/src/github.com/Psiphon-Labs/psiphon-tunnel-core \
 		CGO_ENABLED=0
 SHELL ["/bin/bash", "-c"]
 RUN TARGET_PALTFORMS=${TARGETS:-"$BUILDOS/$BUILDARCH"} &&                                                    \
-		mkdir -p ${DIR}                                                                                       && \
+    mkdir -p ${DIR}                                                                                       && \
 		curl -sL https://github.com/Psiphon-Labs/psiphon-tunnel-core/archive/refs/tags/v${VERSION}.tar.gz |      \
 		tar xz -C ${DIR} --strip-components=1                                                                 && \
 		(IFS=','; for PLATFORM in $TARGET_PALTFORMS;                                                             \
