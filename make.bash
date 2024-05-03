@@ -1,7 +1,7 @@
 #!/bin/bash
 
 TARGETS="linux/amd64,linux/386,linux/arm64,linux/arm/v7,linux/arm/v6"
-VERSION=2.0.29
+VERSION=2.0.30
 
 sudo docker buildx build \
 				--build-arg TARGETS=${TARGETS} \

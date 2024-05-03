@@ -1,5 +1,5 @@
 ARG BUILDPLATFORM=$BUILDPLATFORM
-FROM --platform=$BUILDPLATFORM golang:1.18 AS psiphon_builder
+FROM --platform=$BUILDPLATFORM golang:1.20 AS psiphon_builder
 WORKDIR /go
 LABEL stage=builder
 ARG VERSION=2.0.23
