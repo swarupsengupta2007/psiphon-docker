@@ -34,8 +34,7 @@ docker buildx build --build-arg TARGETS=${TARGETS} -t <your_username>/<your_tag>
 --platform ${TARGETS} . --push
 ```
 
-Or<br>
-4. use the helper script make.bash as follows
+Or use the helper script make.bash as follows
 ```bash
 # optional, choose targets (defaults to the following list)
 export TARGETS="linux/amd64,linux/386,linux/arm64,linux/arm/v7,linux/arm/v6"
