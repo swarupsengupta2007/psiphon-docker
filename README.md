@@ -30,30 +30,24 @@ docker buildx create --name cross-platform --platform ${TARGETS} --use
 docker buildx build -t <your_tag> . --load
 
 # build for multi-arch and push to registry
-docker buildx build --build-arg TARGETS=${TARGETS} -t <your_username>/<your_tag> \
---platform ${TARGETS} . --push
-```
-
-Or use the helper script make.bash as follows
-```bash
 # optional, choose targets (defaults to the following list)
 export TARGETS="linux/amd64,linux/386,linux/arm64,linux/arm/v7,linux/arm/v6"
 
-# optional, choose psiphon version (defaults to the lastest committed docker image)
-export VERSION=2.0.30
+# choose psiphon version
+export VERSION=2.0.31
 
-# optional, choose go version (currently 1.20)
-export GO_VERSION=1.20
+# choose go version (currently 1.22.7)
+export GO_VERSION=1.22.7
 
 # run the script
-./make.bash
+./make.bash --push
 ```
 
 Build-args available
 |build-arg|default|Description|
 |--|--|--|
-|VERSION|2.0.23|psiphon-tunnel-core release version|
-|TARGETS|\<BUIDLOS\>/\<BUILDARCH\>|Targets for cross-compilation for the build stage|
+|VERSION|psiphon-tunnel-core release version|
+|TARGETS|\<BUIDLOS\>/\<BUILDARCH\> (Targets for cross-compilation for the build stage)|
 ---
 
 # Usage
