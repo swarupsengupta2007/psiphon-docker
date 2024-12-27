@@ -45,7 +45,7 @@ export GO_VERSION=1.22.7
 
 Build-args available
 |build-arg|Description|
-|--|--|--|
+|--|--|
 |VERSION|psiphon-tunnel-core release version|
 |TARGETS|\<BUIDLOS\>/\<BUILDARCH\> (Targets for cross-compilation for the build stage)|
 ---
