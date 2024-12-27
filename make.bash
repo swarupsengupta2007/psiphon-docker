@@ -1,8 +1,8 @@
 #!/bin/bash
 
 MK_TARGETS=${TARGETS:-"linux/amd64,linux/386,linux/arm64,linux/arm/v7,linux/arm/v6"}
-MK_VERSION=${VERSION:-2.0.30}
-MK_GO_VERSION=${GO_VERSION:-1.20}
+MK_VERSION=${VERSION:-2.0.31}
+MK_GO_VERSION=${GO_VERSION:-1.22.7}
 
 sudo docker buildx build \
 				--build-arg TARGETS=${MK_TARGETS} \

@@ -38,4 +38,5 @@ COPY base/ /
 COPY psiphon.config ${DEF_DEFAULTS}
 COPY --from=psiphon_builder /go/psiphon_${TARGETOS}_${TARGETARCH}_${TARGETVARIANT} ${DEF_APP}/psiphon
 EXPOSE 8080 1080
+HEALTHCHECK --interval=30s --timeout=5s --start-period=2m --retries=3 CMD netstat -ltn|grep 1080 || exit 1
 VOLUME /config
