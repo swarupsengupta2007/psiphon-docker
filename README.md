@@ -29,15 +29,18 @@ docker buildx create --name cross-platform --platform ${TARGETS} --use
 # Build for current platform and load to docker image
 docker buildx build -t <your_tag> . --load
 
+# If not already done, install the required cross-platform emulators
+docker run --privileged --rm tonistiigi/binfmt --install all
+
 # build for multi-arch and push to registry
 # optional, choose targets (defaults to the following list)
 export TARGETS="linux/amd64,linux/386,linux/arm64,linux/arm/v7,linux/arm/v6"
 
-# choose psiphon version
-export VERSION=2.0.31
+# choose psiphon version (currently 2.0.32)
+export PSIPHON_VERSION=2.0.32
 
-# choose go version (currently 1.22.7)
-export GO_VERSION=1.22.7
+# choose go version (currently 1.23.7)
+export GO_VERSION=1.23.7
 
 # run the script
 ./make.bash --push
