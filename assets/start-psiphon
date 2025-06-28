@@ -1,0 +1,46 @@
+#!/bin/sh
+
+if [ ! -d /config ]; then
+    echo "/config directory not mounted, exiting..."
+    exit 1
+fi
+
+if [ ! -f /config/psiphon.config ]; then
+    cp /etc/psiphon/psiphon.config /config/psiphon.config
+    if [ -n "${HTTP_PORT}" ]; then
+       sed -i -E 's/"LocalHttpProxyPort"[[:space:]]*:[[:space:]]*[0-9]+/"LocalHttpProxyPort": '${HTTP_PORT}'/' /config/psiphon.config
+    fi
+    if [ -n "${SOCKS_PORT}" ]; then
+        sed -i -E 's/"LocalSocksProxyPort"[[:space:]]*:[[:space:]]*[0-9]+/"LocalSocksProxyPort": '${SOCKS_PORT}'/' /config/psiphon.config
+    fi
+    if [ -n "${DEVICE_REGION}" ]; then
+        sed -i -E 's/"DeviceRegion"[[:space:]]*:[[:space:]]*"[^"]*"/"DeviceRegion": "'${DEVICE_REGION}'"/' /config/psiphon.config
+    fi
+    if [ -n "${EGRESS_REGION}" ]; then
+        sed -i -E 's/"EgressRegion"[[:space:]]*:[[:space:]]*"[^"]*"/"EgressRegion": "'${EGRESS_REGION}'"/' /config/psiphon.config
+    fi
+fi
+
+id psiphon > /dev/null 2>&1
+if [ $? -ne 0 ]; then
+    adduser -DH psiphon psiphon
+fi
+
+UID=$(id -u psiphon)
+GID=$(id -g psiphon)
+
+PUID=${PUID:-${UID}}
+PGID=${PGID:-${GID}}
+
+if [ "${PUID}" != "${UID}" ] || [ "${PGID}" != "${GID}" ]; then
+    deluser psiphon >/dev/null 2>&1 || true
+    delgroup psiphon >/dev/null 2>&1 || true
+    addgroup -g ${PGID} psiphon
+    adduser -DH -u ${PUID} -G psiphon psiphon
+fi
+
+chown -R psiphon:psiphon /config
+
+su -s /bin/sh psiphon <<EOF
+psiphon -config /config/psiphon.config
+EOF

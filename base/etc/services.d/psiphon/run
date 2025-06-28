@@ -1,7 +1,0 @@
-#!/usr/bin/with-contenv sh
-
-[[ ! -f ${DEF_CONFIG}/psiphon.config ]] && cp ${DEF_DEFAULTS}/psiphon.config ${DEF_CONFIG}/
-
-chown -R ${DEF_USER}:${DEF_USER} ${DEF_CONFIG}
-
-exec s6-setuidgid ${DEF_USER} ${DEF_APP}/psiphon -config ${DEF_CONFIG}/psiphon.config

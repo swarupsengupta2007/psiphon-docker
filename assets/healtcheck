@@ -1,0 +1,12 @@
+#/bin/sh
+
+if [ ! -d /config ]; then
+    exit 1
+fi
+
+if [ ! -f /config/psiphon.config ]; then
+    exit 1
+else
+    HTTP_PORT=$(sed -n -E 's/.*"LocalHttpProxyPort"[[:space:]]*:[[:space:]]*([0-9]+).*/\1/p' /config/psiphon.config)
+    netstat -ltn | grep ${HTTP_PORT} || exit 1
+fi
