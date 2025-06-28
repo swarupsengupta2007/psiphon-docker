@@ -7,7 +7,6 @@ This docker image runs the ConsoleClient from the [psiphon-tunnel-core](https://
 
 > This build uses `docker buildx` plugin with `docker-container` driver. <br>
 > Docker image available at [swarupsengupta2007/psiphon](https://hub.docker.com/r/swarupsengupta2007/psiphon "swarupsengupta2007/psiphon"). <br>
-> This is built on base image from [swarupsengupta2007/apine-s6-docker](https://github.com/swarupsengupta2007/alpine-s6-docker "swarupsengupta2007/apine-s6-docker")
 
 ```bash
 # Clone this repo
@@ -32,25 +31,16 @@ docker buildx build -t <your_tag> . --load
 # If not already done, install the required cross-platform emulators
 docker run --privileged --rm tonistiigi/binfmt --install all
 
-# build for multi-arch and push to registry
-# optional, choose targets (defaults to the following list)
-export TARGETS="linux/amd64,linux/386,linux/arm64,linux/arm/v7,linux/arm/v6"
-
-# choose psiphon version (currently 2.0.32)
-export PSIPHON_VERSION=2.0.32
-
-# choose go version (currently 1.23.7)
-export GO_VERSION=1.23.7
-
-# run the script
-./make.bash --push
+# run the script, this will build the image for current platform and load it to docker
+./make.bash --load
 ```
 
 Build-args available
-|build-arg|Description|
-|--|--|
-|VERSION|psiphon-tunnel-core release version|
-|TARGETS|\<BUIDLOS\>/\<BUILDARCH\> (Targets for cross-compilation for the build stage)|
+|build-arg|Description|Default|
+|--|--|--|
+|VERSION|psiphon-tunnel-core release version|latest|
+|TARGETS|\<BUIDLOS\>/\<BUILDARCH\> (Targets for cross-compilation for the build stage)|current platform|
+|GO_VERSION|Go version to use for building the psiphon-tunnel-core binary|1.22.7|
 ---
 
 # Usage
@@ -65,6 +55,10 @@ services:
     environment:
       - PUID=1000
       - PGID=1000
+      - HTTP_PORT=8080
+      - SOCKS_PORT=1080
+      - DEVICE_REGION=IN
+      - EGRESS_REGION=SG
     volumes:
       - /path/to/psiphon/config:/config
     ports:
@@ -80,19 +74,30 @@ docker run -d                                  \
     --restart=unless-stopped                   \
     -p 8080:8080                               \
     -p 1080:1080                               \
+    -e HTTP_PORT=8080                          \
+    -e SOCKS_PORT=1080                         \
+    -e DEVICE_REGION=IN                        \
+    -e EGRESS_REGION=SG                        \
     -v /home/swarup/psiphon/config/:/config    \
     swarupsengupta2007/psiphon
 ```
 
-The following Environment var are available<br>
+The following Environment var are available (only applicable when running for the first tome with no psiphon.config in the mounted config directory)<br>
 |ENV variable|Description|Default|
 |--|--|--|
 |PUID|The UID for psiphon process|1000|
 |PGID|The GID for psiphon process|1000|
+|HTTP_PORT|The HTTP proxy port|8080|
+|SOCKS_PORT|The SOCKS proxy port|1080|
+|DEVICE_REGION|The device region for psiphon client|IN|
+|EGRESS_REGION|The egress region for psiphon client|SG|
 
-Following ports and volumes are available 
-|Option|switch|Description|Default|
-|--|--|--|--|
-|HTTP PORT|-p <host_port>:8080|http proxy port|8080|
-|SOCKS PORT|-p <host_port>:1080|socks proxy port|1080|
-|VOLUME|-v /path/to/config:/config|The container storage|/config|
+# Configuration
+The psiphon client configuration is stored in the mounted config directory. /config must be mounted and writable by the psiphon process. <br>
+
+# Healthcheck
+The container has a healthcheck script that checks if the psiphon client is running and healthy. <br>
+You can check the health status of the container using the following command:
+```bash
+docker inspect --format='{{json .State.Health}}' psiphon
+```
