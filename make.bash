@@ -7,10 +7,13 @@ function help_message() {
 	echo "Usage: $0 [OPTIONS]"
 	echo "Options:"
 	echo "  --targets, -t <targets>      Comma-separated list of target platforms (default: current, use 'all' for all supported targets)"
-	echo "  --version, -v <version>      Psiphon version to build (default: 2.0.32)"
+	echo "  --version, -v <version>      Psiphon version to build (default: latest available)"
 	echo "  --go, -g <version>           Go version to use (default: 1.22.7)"
-	echo "  --help, -h                   Show this help message and exit"
+	echo "  --load                       Load the built image into local Docker (cannot be used with --push)"
+	echo "  --push                       Push the built image to Docker Hub (cannot be used with --load)"
 	echo "  --supported-targets          Show supported targets and exit"
+	echo "  --current-target             Show current target platform and exit"
+	echo "  --help, -h                   Show this help message and exit"
 	exit ${1:-1}
 }
 

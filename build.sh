@@ -61,7 +61,8 @@ CURRENT_TARGET="$(go env GOOS)/$(go env GOARCH)"
 TARGETS=${TARGETS:-"current"}
 
 TARGETS=$(decipher_targets "${TARGETS}")
-TARGETS=${TARGETS//,/ }
+TARGETS=${TARGETS%$'\n'}
+IFS=' ' TARGETS=(${TARGETS//,/ })
 
 BUILD_DIR=$(pwd)/tmp_build_$$
 rm -rf "${BUILD_DIR}"
@@ -77,21 +78,21 @@ pushd "${BUILD_DIR}/ConsoleClient" > /dev/null
 
 export CGO_ENABLED=0
 
-for PLATFORM in ${TARGETS}
+for PLATFORM in "${TARGETS[@]}"
 do
-	IFS='/' read -r OS ARCH VARIANT <<< "${PLATFORM}"
-	
-	export GOOS=${OS}
-	export GOARCH=${ARCH}
-	if [[ -n "${VARIANT}" ]]; then
-		export GOARM=${VARIANT#v}
-	fi
-	GOEXT=""
-	if [[ "${OS}" == "windows" ]]; then
-		GOEXT=".exe"
-	fi
-	${GO} build -a -tags netgo -ldflags "-s -w -extldflags '-static'" -o "${BIN_DIR}/psiphon_${PLATFORM//\//_}${GOEXT}"
-	unset GOOS GOARCH GOARM
+       echo "Building for ${PLATFORM}..."
+       IFS='/' read -r OS ARCH VARIANT <<< "${PLATFORM}"
+       export GOOS=${OS}
+       export GOARCH=${ARCH}
+       if [[ -n "${VARIANT}" ]]; then
+	       export GOARM=${VARIANT#v}
+       fi
+       GOEXT=""
+       if [[ "${OS}" == "windows" ]]; then
+	       GOEXT=".exe"
+       fi
+       ${GO} build -a -tags netgo -ldflags "-s -w -extldflags '-static'" -o "${BIN_DIR}/psiphon_${PLATFORM//\//_}${GOEXT}"
+       unset GOOS GOARCH GOARM
 done
 
 popd > /dev/null
