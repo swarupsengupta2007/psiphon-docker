@@ -3,9 +3,9 @@
 Docker image for Psiphon
 
 Psiphon is an Internet censorship circumvention system. <br>
-This docker image runs the ConsoleClient from the [psiphon-tunnel-core](https://github.com/Psiphon-Labs/psiphon-tunnel-core "psiphon-tunnel-core").
+This Docker image runs the ConsoleClient from the [psiphon-tunnel-core](https://github.com/Psiphon-Labs/psiphon-tunnel-core "psiphon-tunnel-core").
 
-> This build uses `docker buildx` plugin with `docker-container` driver. <br>
+> This build uses the `docker buildx` plugin with the `docker-container` driver. <br>
 > Docker image available at [swarupsengupta2007/psiphon](https://hub.docker.com/r/swarupsengupta2007/psiphon "swarupsengupta2007/psiphon"). <br>
 
 ```bash
@@ -15,9 +15,9 @@ git clone https://github.com/swarupsengupta2007/psiphon-docker
 
 # Building<br>
 
-1. Ensure buildx is enabled for docker
+1. Ensure buildx is enabled for Docker
 2. Create a builder instance for multi-arch
-3. Build docker image for current platform or multi-arch
+3. Build Docker image for current platform or multi-arch
 ```bash
 # choose target platforms
 TARGETS="linux/amd64,linux/386,linux/arm64,linux/arm/v7,linux/arm/v6"
@@ -25,13 +25,13 @@ TARGETS="linux/amd64,linux/386,linux/arm64,linux/arm/v7,linux/arm/v6"
 # Create a builder instance if it doesn't exist
 docker buildx create --name cross-platform --platform ${TARGETS} --use 
 
-# Build for current platform and load to docker image
+# Build for the current platform and load to Docker image
 docker buildx build -t <your_tag> . --load
 
 # If not already done, install the required cross-platform emulators
 docker run --privileged --rm tonistiigi/binfmt --install all
 
-# run the script, this will build the image for current platform and load it to docker
+# run the script, this will build the image for the current platform and load it to Docker
 ./make.bash --load
 ```
 
@@ -82,21 +82,21 @@ docker run -d                                  \
     swarupsengupta2007/psiphon
 ```
 
-The following Environment var are available (only applicable when running for the first tome with no psiphon.config in the mounted config directory)<br>
+The following Environment var are available (only applicable when running for the first time with no psiphon.config in the mounted config directory)<br>
 |ENV variable|Description|Default|
 |--|--|--|
 |PUID|The UID for psiphon process|1000|
 |PGID|The GID for psiphon process|1000|
 |HTTP_PORT|The HTTP proxy port|8080|
 |SOCKS_PORT|The SOCKS proxy port|1080|
-|DEVICE_REGION|The device region for psiphon client|IN|
-|EGRESS_REGION|The egress region for psiphon client|SG|
+|DEVICE_REGION|The device region for Psiphon client|IN|
+|EGRESS_REGION|The egress region for Psiphon client|SG|
 
 # Configuration
-The psiphon client configuration is stored in the mounted config directory. /config must be mounted and writable by the psiphon process. <br>
+The Psiphon client configuration is stored in the mounted config directory. /config must be mounted and writable by the psiphon process. <br>
 
 # Healthcheck
-The container has a healthcheck script that checks if the psiphon client is running and healthy. <br>
+The container has a healthcheck script that checks if the Psiphon client is running and healthy. <br>
 You can check the health status of the container using the following command:
 ```bash
 docker inspect --format='{{json .State.Health}}' psiphon
