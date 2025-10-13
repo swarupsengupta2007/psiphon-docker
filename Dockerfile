@@ -17,7 +17,7 @@ fi
 /go/build.sh ${ARGS}
 __SCRIPT__
 
-FROM alpine:3.22.1
+FROM alpine:3.22.2
 ARG TARGETOS
 ARG TARGETARCH
 ARG TARGETVARIANT
