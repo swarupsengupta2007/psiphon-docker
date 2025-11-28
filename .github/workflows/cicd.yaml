@@ -118,8 +118,6 @@ jobs:
           OWNER=${{ github.repository_owner }}
           GH_IMAGE=ghcr.io/${OWNER}/psiphon
 
-          echo "Searching: $GH_IMAGE"
-
           if docker manifest inspect ${GH_IMAGE}:${VERSION} >/dev/null 2>&1; then
             echo "GHCR: ${VERSION} already exists, skipping."
             echo "ghcr_tag=false" >> "$GITHUB_OUTPUT"
