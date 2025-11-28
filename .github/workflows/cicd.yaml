@@ -148,5 +148,7 @@ jobs:
           else
             echo "Not pushing anything as it's a dry run"
           fi
+
+          echo "Running: ./make.bash -t all -v \"$PSIPHON_VERSION\" -g \"$GO_VERSION\" ${ARGS[*]}"
           
           ./make.bash -t all -v "$PSIPHON_VERSION" -g "$GO_VERSION" "${ARGS[@]}"
