@@ -17,15 +17,16 @@ on:
           - "true"
           - "false"
 
+permissions:
+  contents: read
+
 env:
   DOCKERHUB_REPO: swarupsengupta2007/psiphon
+  TARGET_PLATFORMS: linux/amd64,linux/386,linux/arm64,linux/arm/v7,linux/arm/v6
 
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
-    permissions:
-      packages: write
-      contents: read
 
     steps:
       - name: Checkout repository
@@ -42,13 +43,6 @@ jobs:
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
-
-      - name: Log in to GHCR
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GHPAT }}
 
       - name: Determine dry-run mode
         id: dryrun
@@ -98,61 +92,81 @@ jobs:
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
           echo "go_version=$GO_VERSION" >> "$GITHUB_OUTPUT"
 
-      - name: Check Docker Hub if tag missing
-        id: dockerhub_check
+      - name: Check if this Psiphon version tag already exists on Docker Hub
+        id: check
+        env:
+          DOCKERHUB_REPO: ${{ env.DOCKERHUB_REPO }}
+          VERSION: ${{ steps.psiphon.outputs.version }}
         run: |
-          VERSION=${{ steps.psiphon.outputs.version }}
-          DH_IMAGE=docker.io/swarupsengupta2007/psiphon
+          echo "Checking if ${DOCKERHUB_REPO}:${VERSION} exists on Docker Hub..."
 
-          if docker manifest inspect ${DH_IMAGE}:${VERSION} >/dev/null 2>&1; then
-            echo "Docker Hub: ${VERSION} already exists, skipping."
-            echo "dockerhub_tag=false" >> "$GITHUB_OUTPUT"
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+            "https://hub.docker.com/v2/repositories/${DOCKERHUB_REPO}/tags/${VERSION}/")
+
+          echo "HTTP status from Docker Hub: $STATUS"
+
+          if [ "$STATUS" -eq 200 ]; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+            echo "Image tag ${DOCKERHUB_REPO}:${VERSION} already exists on Docker Hub."
           else
-          echo "Docker Hub: ${VERSION} needs to be pushed."
-            echo "dockerhub_tag=true" >> "$GITHUB_OUTPUT"
-          fi
-      - name: Check GHCR if tag missing
-        id: ghcr_check
-        run: |
-          VERSION=${{ steps.psiphon.outputs.version }}
-          OWNER=${{ github.repository_owner }}
-          GH_IMAGE=ghcr.io/${OWNER}/psiphon
-
-          echo "ghcr_tag=false" >> "$GITHUB_OUTPUT"
-
-          #if docker manifest inspect ${GH_IMAGE}:${VERSION} >/dev/null 2>&1; then
-          #  echo "GHCR: ${VERSION} already exists, skipping."
-          #  echo "ghcr_tag=false" >> "$GITHUB_OUTPUT"
-          #else
-          #  echo "GHCR: ${VERSION} needs to be pushed"
-          #  echo "ghcr_tag=true" >> "$GITHUB_OUTPUT"
-          #fi
-
-      - name: Build and push multi-arch image
-        id: build_img
-        run: |
-          PSIPHON_VERSION=${{ steps.psiphon.outputs.version }}
-          GO_VERSION=${{ steps.psiphon.outputs.go_version }}
-          DOCKERHUB=${{ steps.dockerhub_check.outputs.dockerhub_tag }}
-          GHCR=${{ steps.ghcr_check.outputs.ghcr_tag }}
-          DRY_RUN=${{ steps.dryrun.outputs.dry_run }}
-
-          ARGS=()
-
-          if [[ "$DRY_RUN" == "false" ]]; then
-            if [[ "$DOCKERHUB" == "false" ]]; then
-              ARGS+=(--nodockerhub)
-            fi
-            if [[ "$GHCR" == "false" ]]; then
-              ARGS+=(--noghcr)
-            fi
-            if [[ "$DOCKERHUB" == "true" || "$GHCR" == "true" ]]; then
-              ARGS+=(--push)
-            fi
-          else
-            echo "Not pushing anything as it's a dry run"
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+            echo "Image tag ${DOCKERHUB_REPO}:${VERSION} does not exist yet."
           fi
 
-          echo "Running: ./make.bash -t all -v \"$PSIPHON_VERSION\" -g \"$GO_VERSION\" ${ARGS[*]}"
-          
-          ./make.bash -t all -v "$PSIPHON_VERSION" -g "$GO_VERSION" "${ARGS[@]}"
+      - name: Build and (maybe) push multi-arch image
+        # In dry-run: always build (even if tag exists), but do NOT push.
+        # In normal mode: only build if tag does not exist, and push.
+        if: steps.dryrun.outputs.dry_run == 'true' || steps.check.outputs.exists != 'true'
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./Dockerfile
+          platforms: ${{ env.TARGET_PLATFORMS }}
+          push: ${{ steps.dryrun.outputs.dry_run != 'true' }}
+          tags: |
+            ${{ env.DOCKERHUB_REPO }}:${{ steps.psiphon.outputs.version }}
+            ${{ env.DOCKERHUB_REPO }}:latest
+          build-args: |
+            TARGETS= ${{ env.TARGET_PLATFORMS }}
+            GO_VERSION=${{ steps.psiphon.outputs.go_version }}
+            PSIPHON_VERSION=${{ steps.psiphon.outputs.version }}
+
+      - name: Summary of run (dry-run vs real)
+        if: always()
+        env:
+          DOCKERHUB_REPO: ${{ env.DOCKERHUB_REPO }}
+          VERSION: ${{ steps.psiphon.outputs.version }}
+          LATEST_TAG: ${{ steps.psiphon.outputs.latest_tag }}
+          GO_VERSION: ${{ steps.psiphon.outputs.go_version }}
+          DRY_RUN: ${{ steps.dryrun.outputs.dry_run }}
+          EXISTS: ${{ steps.check.outputs.exists }}
+          TARGET_PLATFORMS: ${{ env.TARGET_PLATFORMS }}
+        run: |
+          echo "================= CI SUMMARY ================="
+          echo "Upstream Psiphon tag:     ${LATEST_TAG}"
+          echo "Normalized version:       ${VERSION}"
+          echo "Go toolchain version:     ${GO_VERSION}"
+          echo "Target platforms:         ${TARGET_PLATFORMS}"
+          echo "Dry-run mode:             ${DRY_RUN}"
+          echo "Tag existed on DockerHub: ${EXISTS}"
+          echo "Image tags considered:    ${DOCKERHUB_REPO}:${VERSION}, ${DOCKERHUB_REPO}:latest"
+
+          if [ "$DRY_RUN" = "true" ]; then
+            echo ""
+            echo "Result: DRY-RUN"
+            echo " - Image was BUILT locally on the runner."
+            echo " - Image was NOT pushed to Docker Hub."
+          else
+            if [ "$EXISTS" = "true" ]; then
+              echo ""
+              echo "Result: SKIPPED PUSH"
+              echo " - Image tag already existed on Docker Hub."
+              echo " - No new image was built/pushed."
+            else
+              echo ""
+              echo "Result: REAL BUILD & PUSH"
+              echo " - Multi-arch image was built."
+              echo " - Pushed: ${DOCKERHUB_REPO}:${VERSION} and :latest"
+            fi
+          fi
+          echo "==============================================="
