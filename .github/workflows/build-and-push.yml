@@ -1,0 +1,171 @@
+name: Build & push Psiphon image
+
+on:
+  # Poll upstream Psiphon releases periodically (real builds)
+  schedule:
+    - cron: "0 */6 * * *"  # every 6 hours
+
+  # Manual runs, with an option to do a dry run (no push)
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Dry run (build but DO NOT push to Docker Hub)"
+        required: false
+        default: "true"
+        type: choice
+        options:
+          - "true"
+          - "false"
+
+permissions:
+  contents: read
+
+env:
+  DOCKERHUB_REPO: swarupsengupta2007/psiphon
+  TARGET_PLATFORMS: linux/amd64,linux/386,linux/arm64,linux/arm/v7,linux/arm/v6
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up QEMU (for multi-arch)
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Determine dry-run mode
+        id: dryrun
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ github.event.inputs.dry_run }}" = "true" ]; then
+            echo "dry_run=true" >> "$GITHUB_OUTPUT"
+            echo "Running in DRY-RUN mode (no push to Docker Hub)."
+          else
+            echo "dry_run=false" >> "$GITHUB_OUTPUT"
+            echo "Running in NORMAL mode (will push to Docker Hub if needed)."
+          fi
+
+      - name: Get latest psiphon-tunnel-core release & Go version
+        id: psiphon
+        run: |
+          API_URL="https://api.github.com/repos/Psiphon-Labs/psiphon-tunnel-core/releases/latest"
+
+          echo "Fetching latest release from ${API_URL}"
+          RESPONSE=$(curl -fsSL "$API_URL")
+
+          LATEST_TAG=$(echo "$RESPONSE" | jq -r '.tag_name')
+          if [ -z "$LATEST_TAG" ] || [ "$LATEST_TAG" = "null" ]; then
+            echo "Failed to fetch latest tag from Psiphon-Labs/psiphon-tunnel-core"
+            exit 1
+          fi
+
+          VERSION=${LATEST_TAG#v}
+
+          echo "Latest upstream tag: $LATEST_TAG"
+          echo "Normalized version (without v): $VERSION"
+
+          GO_MOD_URL="https://raw.githubusercontent.com/Psiphon-Labs/psiphon-tunnel-core/${LATEST_TAG}/go.mod"
+          echo "Fetching go.mod from: $GO_MOD_URL"
+
+          curl -fsSL "$GO_MOD_URL" -o /tmp/go.mod
+
+          GO_VERSION=$(awk '/^go [0-9]+\.[0-9]+/ {print $2; exit}' /tmp/go.mod)
+          if [ -z "$GO_VERSION" ]; then
+            echo "Could not determine Go version from go.mod; contents:"
+            cat /tmp/go.mod
+            exit 1
+          fi
+
+          echo "Detected Go version from go.mod: $GO_VERSION"
+
+          echo "latest_tag=$LATEST_TAG" >> "$GITHUB_OUTPUT"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "go_version=$GO_VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Check if this Psiphon version tag already exists on Docker Hub
+        id: check
+        env:
+          DOCKERHUB_REPO: ${{ env.DOCKERHUB_REPO }}
+          VERSION: ${{ steps.psiphon.outputs.version }}
+        run: |
+          echo "Checking if ${DOCKERHUB_REPO}:${VERSION} exists on Docker Hub..."
+
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+            "https://hub.docker.com/v2/repositories/${DOCKERHUB_REPO}/tags/${VERSION}/")
+
+          echo "HTTP status from Docker Hub: $STATUS"
+
+          if [ "$STATUS" -eq 200 ]; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+            echo "Image tag ${DOCKERHUB_REPO}:${VERSION} already exists on Docker Hub."
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+            echo "Image tag ${DOCKERHUB_REPO}:${VERSION} does not exist yet."
+          fi
+
+      - name: Build and (maybe) push multi-arch image
+        # In dry-run: always build (even if tag exists), but do NOT push.
+        # In normal mode: only build if tag does not exist, and push.
+        if: steps.dryrun.outputs.dry_run == 'true' || steps.check.outputs.exists != 'true'
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./Dockerfile
+          platforms: ${{ env.TARGET_PLATFORMS }}
+          push: ${{ steps.dryrun.outputs.dry_run != 'true' }}
+          tags: |
+            ${{ env.DOCKERHUB_REPO }}:${{ steps.psiphon.outputs.version }}
+            ${{ env.DOCTORHUB_REPO }}:latest
+          build-args: |
+            GO_VERSION=${{ steps.psiphon.outputs.go_version }}
+            PSIPHON_VERSION=${{ steps.psiphon.outputs.version }}
+
+      - name: Summary of run (dry-run vs real)
+        if: always()
+        env:
+          DOCKERHUB_REPO: ${{ env.DOCKERHUB_REPO }}
+          VERSION: ${{ steps.psiphon.outputs.version }}
+          LATEST_TAG: ${{ steps.psiphon.outputs.latest_tag }}
+          GO_VERSION: ${{ steps.psiphon.outputs.go_version }}
+          DRY_RUN: ${{ steps.dryrun.outputs.dry_run }}
+          EXISTS: ${{ steps.check.outputs.exists }}
+          TARGET_PLATFORMS: ${{ env.TARGET_PLATFORMS }}
+        run: |
+          echo "================= CI SUMMARY ================="
+          echo "Upstream Psiphon tag:     ${LATEST_TAG}"
+          echo "Normalized version:       ${VERSION}"
+          echo "Go toolchain version:     ${GO_VERSION}"
+          echo "Target platforms:         ${TARGET_PLATFORMS}"
+          echo "Dry-run mode:             ${DRY_RUN}"
+          echo "Tag existed on DockerHub: ${EXISTS}"
+          echo "Image tags considered:    ${DOCKERHUB_REPO}:${VERSION}, ${DOCKERHUB_REPO}:latest"
+
+          if [ "$DRY_RUN" = "true" ]; then
+            echo ""
+            echo "Result: DRY-RUN"
+            echo " - Image was BUILT locally on the runner."
+            echo " - Image was NOT pushed to Docker Hub."
+          else
+            if [ "$EXISTS" = "true" ]; then
+              echo ""
+              echo "Result: SKIPPED PUSH"
+              echo " - Image tag already existed on Docker Hub."
+              echo " - No new image was built/pushed."
+            else
+              echo ""
+              echo "Result: REAL BUILD & PUSH"
+              echo " - Multi-arch image was built."
+              echo " - Pushed: ${DOCKERHUB_REPO}:${VERSION} and :latest"
+            fi
+          fi
+          echo "==============================================="
