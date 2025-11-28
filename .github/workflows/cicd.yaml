@@ -1,4 +1,4 @@
-name: Build & push Psiphon image
+name: CI/CD for Psiphon Docker
 
 on:
   # Poll upstream Psiphon releases periodically (real builds)
