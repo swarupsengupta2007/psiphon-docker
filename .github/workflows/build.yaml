@@ -1,0 +1,158 @@
+name: CI/CD for Psiphon Docker
+
+on:
+  # Poll upstream Psiphon releases periodically (real builds)
+  schedule:
+    - cron: "0 */6 * * *"  # every 6 hours
+
+  # Manual runs, with an option to do a dry run (no push)
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Dry run (build but DO NOT push to Docker Hub)"
+        required: false
+        default: "true"
+        type: choice
+        options:
+          - "true"
+          - "false"
+
+env:
+  DOCKERHUB_REPO: swarupsengupta2007/psiphon
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+      contents: read
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up QEMU (for multi-arch)
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GHPAT }}
+
+      - name: Determine dry-run mode
+        id: dryrun
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ github.event.inputs.dry_run }}" = "true" ]; then
+            echo "dry_run=true" >> "$GITHUB_OUTPUT"
+            echo "Running in DRY-RUN mode (no push to Docker Hub)."
+          else
+            echo "dry_run=false" >> "$GITHUB_OUTPUT"
+            echo "Running in NORMAL mode (will push to Docker Hub if needed)."
+          fi
+
+      - name: Get latest psiphon-tunnel-core release & Go version
+        id: psiphon
+        run: |
+          API_URL="https://api.github.com/repos/Psiphon-Labs/psiphon-tunnel-core/releases/latest"
+
+          echo "Fetching latest release from ${API_URL}"
+          RESPONSE=$(curl -fsSL "$API_URL")
+
+          LATEST_TAG=$(echo "$RESPONSE" | jq -r '.tag_name')
+          if [ -z "$LATEST_TAG" ] || [ "$LATEST_TAG" = "null" ]; then
+            echo "Failed to fetch latest tag from Psiphon-Labs/psiphon-tunnel-core"
+            exit 1
+          fi
+
+          VERSION=${LATEST_TAG#v}
+
+          echo "Latest upstream tag: $LATEST_TAG"
+          echo "Normalized version (without v): $VERSION"
+
+          GO_MOD_URL="https://raw.githubusercontent.com/Psiphon-Labs/psiphon-tunnel-core/${LATEST_TAG}/go.mod"
+          echo "Fetching go.mod from: $GO_MOD_URL"
+
+          curl -fsSL "$GO_MOD_URL" -o /tmp/go.mod
+
+          GO_VERSION=$(awk '/^go [0-9]+\.[0-9]+/ {print $2; exit}' /tmp/go.mod)
+          if [ -z "$GO_VERSION" ]; then
+            echo "Could not determine Go version from go.mod; contents:"
+            cat /tmp/go.mod
+            exit 1
+          fi
+
+          echo "Detected Go version from go.mod: $GO_VERSION"
+
+          echo "latest_tag=$LATEST_TAG" >> "$GITHUB_OUTPUT"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "go_version=$GO_VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Check Docker Hub if tag missing
+        id: dockerhub_check
+        run: |
+          VERSION=${{ steps.psiphon.outputs.version }}
+          DH_IMAGE=docker.io/swarupsengupta2007/psiphon
+
+          if docker manifest inspect ${DH_IMAGE}:${VERSION} >/dev/null 2>&1; then
+            echo "Docker Hub: ${VERSION} already exists, skipping."
+            echo "dockerhub_tag=false" >> "$GITHUB_OUTPUT"
+          else
+          echo "Docker Hub: ${VERSION} needs to be pushed."
+            echo "dockerhub_tag=true" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Check GHCR if tag missing
+        id: ghcr_check
+        run: |
+          VERSION=${{ steps.psiphon.outputs.version }}
+          OWNER=${{ github.repository_owner }}
+          GH_IMAGE=ghcr.io/${OWNER}/psiphon
+
+          echo "ghcr_tag=false" >> "$GITHUB_OUTPUT"
+
+          #if docker manifest inspect ${GH_IMAGE}:${VERSION} >/dev/null 2>&1; then
+          #  echo "GHCR: ${VERSION} already exists, skipping."
+          #  echo "ghcr_tag=false" >> "$GITHUB_OUTPUT"
+          #else
+          #  echo "GHCR: ${VERSION} needs to be pushed"
+          #  echo "ghcr_tag=true" >> "$GITHUB_OUTPUT"
+          #fi
+
+      - name: Build and push multi-arch image
+        id: build_img
+        run: |
+          PSIPHON_VERSION=${{ steps.psiphon.outputs.version }}
+          GO_VERSION=${{ steps.psiphon.outputs.go_version }}
+          DOCKERHUB=${{ steps.dockerhub_check.outputs.dockerhub_tag }}
+          GHCR=${{ steps.ghcr_check.outputs.ghcr_tag }}
+          DRY_RUN=${{ steps.dryrun.outputs.dry_run }}
+
+          ARGS=()
+
+          if [[ "$DRY_RUN" == "false" ]]; then
+            if [[ "$DOCKERHUB" == "false" ]]; then
+              ARGS+=(--nodockerhub)
+            fi
+            if [[ "$GHCR" == "false" ]]; then
+              ARGS+=(--noghcr)
+            fi
+            if [[ "$DOCKERHUB" == "true" || "$GHCR" == "true" ]]; then
+              ARGS+=(--push)
+            fi
+          else
+            echo "Not pushing anything as it's a dry run"
+          fi
+
+          echo "Running: ./make.bash -t all -v \"$PSIPHON_VERSION\" -g \"$GO_VERSION\" ${ARGS[*]}"
+          
+          ./make.bash -t all -v "$PSIPHON_VERSION" -g "$GO_VERSION" "${ARGS[@]}"
