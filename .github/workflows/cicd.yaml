@@ -108,6 +108,7 @@ jobs:
             echo "Docker Hub: ${VERSION} already exists, skipping."
             echo "dockerhub_tag=false" >> "$GITHUB_OUTPUT"
           else
+          echo "Docker Hub: ${VERSION} needs to be pushed."
             echo "dockerhub_tag=true" >> "$GITHUB_OUTPUT"
           fi
       - name: Check GHCR if tag missing
@@ -121,6 +122,7 @@ jobs:
             echo "GHCR: ${VERSION} already exists, skipping."
             echo "ghcr_tag=false" >> "$GITHUB_OUTPUT"
           else
+            echo "GHCR: ${VERSION} needs to be pushed"
             echo "ghcr_tag=true" >> "$GITHUB_OUTPUT"
           fi
 
