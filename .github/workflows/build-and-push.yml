@@ -127,6 +127,7 @@ jobs:
             ${{ env.DOCKERHUB_REPO }}:${{ steps.psiphon.outputs.version }}
             ${{ env.DOCKERHUB_REPO }}:latest
           build-args: |
+            TARGETS= ${{ env.TARGET_PLATFORMS }}
             GO_VERSION=${{ steps.psiphon.outputs.go_version }}
             PSIPHON_VERSION=${{ steps.psiphon.outputs.version }}
 
