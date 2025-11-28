@@ -101,8 +101,9 @@ jobs:
       - name: Build multi-arch image
         id: build_img
         run: |
-          VERSION=${{ steps.psiphon.outputs.version }}
-          ./make.bash -t all -g "${VERSION}"
+          PSIPHON_VERSION=${{ steps.psiphon.outputs.version }}
+          GO_VERSION=${{ steps.psiphon.outputs.go_version }}
+          ./make.bash -t all -v "$PSIPHON_VERSION" -g "$GO_VERSION"
 
       - name: Push to Docker Hub if missing
         id: dockerhub_push
