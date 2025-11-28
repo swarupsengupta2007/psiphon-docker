@@ -19,6 +19,7 @@ on:
 
 permissions:
   contents: read
+  packages: write
 
 env:
   DOCKERHUB_REPO: swarupsengupta2007/psiphon
