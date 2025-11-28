@@ -131,7 +131,7 @@ jobs:
         run: |
           PSIPHON_VERSION=${{ steps.psiphon.outputs.version }}
           GO_VERSION=${{ steps.psiphon.outputs.go_version }}
-          DOCKERHUB=${{ steps.dockerhub_check.outputs.dockerub_tag }}
+          DOCKERHUB=${{ steps.dockerhub_check.outputs.dockerhub_tag }}
           GHCR=${{ steps.ghcr_check.outputs.ghcr_tag }}
           DRY_RUN=${{ steps.dryrun.outputs.dry_run }}
 
