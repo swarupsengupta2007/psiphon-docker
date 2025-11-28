@@ -98,35 +98,20 @@ jobs:
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
           echo "go_version=$GO_VERSION" >> "$GITHUB_OUTPUT"
 
-      - name: Build multi-arch image
-        id: build_img
-        run: |
-          PSIPHON_VERSION=${{ steps.psiphon.outputs.version }}
-          GO_VERSION=${{ steps.psiphon.outputs.go_version }}
-          ./make.bash -t all -v "$PSIPHON_VERSION" -g "$GO_VERSION"
-
-      - name: Push to Docker Hub if missing
-        id: dockerhub_push
-        if: steps.dryrun.outputs.dry_run != 'true'
+      - name: Check Docker Hub if tag missing
+        id: dockerhub_check
         run: |
           VERSION=${{ steps.psiphon.outputs.version }}
           DH_IMAGE=docker.io/swarupsengupta2007/psiphon
 
           if docker manifest inspect ${DH_IMAGE}:${VERSION} >/dev/null 2>&1; then
             echo "Docker Hub: ${VERSION} already exists, skipping."
-            echo "pushed_dockerhub=false" >> "$GITHUB_OUTPUT"
+            echo "dockerhub_tag=false" >> "$GITHUB_OUTPUT"
           else
-            docker tag psiphon:${VERSION} ${DH_IMAGE}:${VERSION}
-            docker push ${DH_IMAGE}:${VERSION}
-
-            docker tag psiphon:${VERSION} ${DH_IMAGE}:latest
-            docker push ${DH_IMAGE}:latest
-
-            echo "pushed_dockerhub=true" >> "$GITHUB_OUTPUT"
+            echo "dockerhub_tag=true" >> "$GITHUB_OUTPUT"
           fi
-      - name: Push to GHCR if missing
-        id: ghcr_push
-        if: steps.dryrun.outputs.dry_run != 'true'
+      - name: Check GHCR if tag missing
+        id: ghcr_check
         run: |
           VERSION=${{ steps.psiphon.outputs.version }}
           OWNER=${{ github.repository_owner }}
@@ -134,15 +119,32 @@ jobs:
 
           if docker manifest inspect ${GH_IMAGE}:${VERSION} >/dev/null 2>&1; then
             echo "GHCR: ${VERSION} already exists, skipping."
-            echo "pushed_ghcr=false" >> "$GITHUB_OUTPUT"
+            echo "ghcr_tag=false" >> "$GITHUB_OUTPUT"
           else
-            echo "GHCR: pushing ${VERSION} and latest"
-
-            docker tag psiphon:${VERSION} ${GH_IMAGE}:${VERSION}
-            docker push ${GH_IMAGE}:${VERSION}
-
-            docker tag psiphon:${VERSION} ${GH_IMAGE}:latest
-            docker push ${GH_IMAGE}:latest
-
-            echo "pushed_ghcr=true" >> "$GITHUB_OUTPUT"
+            echo "ghcr_tag=true" >> "$GITHUB_OUTPUT"
           fi
+
+      - name: Build and push multi-arch image
+        id: build_img
+        run: |
+          PSIPHON_VERSION=${{ steps.psiphon.outputs.version }}
+          GO_VERSION=${{ steps.psiphon.outputs.go_version }}
+          DOCKERHUB=${{ steps.dockerhub_check.outputs.dockerub_tab }}
+          GHCR=${{ steps.ghcr_check.outputs.ghcr_tab }}
+          DRY_RUN=${{ steps.dryrun.outputs.dry_run }}
+
+          ARGS=()
+
+          if [[ "$DRY_RUN" == "false" ]]; then
+            if [[ "$DOCKERHUB" == "false" ]]; then
+              ARGS+=(--nodockerhub)
+            fi
+            if [[ "$GHCR" == "false" ]]; then
+              ARGS+=(--noghcr)
+            fi
+            ARGS+=(--push)
+          else
+            echo "Not pushing anything as it's a dry run"
+          fi
+          
+          ./make.bash -t all -v "$PSIPHON_VERSION" -g "$GO_VERSION" "$ARGS[@]"
