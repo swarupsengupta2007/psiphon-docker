@@ -26,7 +26,7 @@ RUN --mount=type=bind,from=psiphon_builder,source=/go/dist,target=/tmp/psiphon \
 	<<__SCRIPT__
     apk add --no-cache tini
 	cp /tmp/assets/start-psiphon /usr/local/bin/start-psiphon
-	cp /tmp/assets/healtcheck /usr/local/bin/healtcheck
+	cp /tmp/assets/healthcheck /usr/local/bin/healthcheck
 	mkdir -p /etc/psiphon
 	cp /tmp/assets/psiphon.config /etc/psiphon/psiphon.config
 	if [ -z "${TARGETVARIANT}" ]; then
@@ -35,9 +35,9 @@ RUN --mount=type=bind,from=psiphon_builder,source=/go/dist,target=/tmp/psiphon \
 		cp /tmp/psiphon/psiphon_${TARGETOS}_${TARGETARCH}_${TARGETVARIANT} /usr/local/bin/psiphon
 	fi
 	chmod +x /usr/local/bin/start-psiphon 
-	chmod +x /usr/local/bin/healtcheck
+	chmod +x /usr/local/bin/healthcheck
 	chmod +x /usr/local/bin/psiphon
 __SCRIPT__
 ENTRYPOINT ["/sbin/tini", "--"]
 CMD ["/usr/local/bin/start-psiphon"]
-HEALTHCHECK --interval=30s --timeout=5s --start-period=2m --retries=3 CMD healtcheck
+HEALTHCHECK --interval=30s --timeout=5s --start-period=2m --retries=3 CMD healthcheck
