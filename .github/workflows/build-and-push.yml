@@ -125,7 +125,7 @@ jobs:
           push: ${{ steps.dryrun.outputs.dry_run != 'true' }}
           tags: |
             ${{ env.DOCKERHUB_REPO }}:${{ steps.psiphon.outputs.version }}
-            ${{ env.DOCTORHUB_REPO }}:latest
+            ${{ env.DOCKERHUB_REPO }}:latest
           build-args: |
             GO_VERSION=${{ steps.psiphon.outputs.go_version }}
             PSIPHON_VERSION=${{ steps.psiphon.outputs.version }}
