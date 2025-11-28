@@ -147,4 +147,4 @@ jobs:
             echo "Not pushing anything as it's a dry run"
           fi
           
-          ./make.bash -t all -v "$PSIPHON_VERSION" -g "$GO_VERSION" "$ARGS[@]"
+          ./make.bash -t all -v "$PSIPHON_VERSION" -g "$GO_VERSION" "${ARGS[@]}"
