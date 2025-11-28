@@ -118,13 +118,15 @@ jobs:
           OWNER=${{ github.repository_owner }}
           GH_IMAGE=ghcr.io/${OWNER}/psiphon
 
-          if docker manifest inspect ${GH_IMAGE}:${VERSION} >/dev/null 2>&1; then
-            echo "GHCR: ${VERSION} already exists, skipping."
-            echo "ghcr_tag=false" >> "$GITHUB_OUTPUT"
-          else
-            echo "GHCR: ${VERSION} needs to be pushed"
-            echo "ghcr_tag=true" >> "$GITHUB_OUTPUT"
-          fi
+          echo "ghcr_tag=false" >> "$GITHUB_OUTPUT"
+
+          #if docker manifest inspect ${GH_IMAGE}:${VERSION} >/dev/null 2>&1; then
+          #  echo "GHCR: ${VERSION} already exists, skipping."
+          #  echo "ghcr_tag=false" >> "$GITHUB_OUTPUT"
+          #else
+          #  echo "GHCR: ${VERSION} needs to be pushed"
+          #  echo "ghcr_tag=true" >> "$GITHUB_OUTPUT"
+          #fi
 
       - name: Build and push multi-arch image
         id: build_img
