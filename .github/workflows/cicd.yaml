@@ -17,16 +17,15 @@ on:
           - "true"
           - "false"
 
-permissions:
-  contents: read
-  packages: write
-
 env:
   DOCKERHUB_REPO: swarupsengupta2007/psiphon
 
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
+    permissions:
+      packages: write
+      contents: read
 
     steps:
       - name: Checkout repository
