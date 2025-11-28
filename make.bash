@@ -12,6 +12,8 @@ function help_message() {
 	echo "  --targets, -t <targets>      Comma-separated list of target platforms (default: current, use 'all' for all supported targets)"
 	echo "  --version, -v <version>      Psiphon version to build (default: latest available)"
 	echo "  --go, -g <version>           Go version to use (default: 1.22.7)"
+	echo "  --nodockerhub		     Don't push image to docker.io"
+	echo "  --noghcr		     Don't push image to gchr.io"
 	echo "  --load                       Load the built image into local Docker (cannot be used with --push)"
 	echo "  --push                       Push the built image to Docker Hub (cannot be used with --load)"
 	echo "  --supported-targets          Show supported targets and exit"
@@ -22,6 +24,8 @@ function help_message() {
 
 EXTRA_BUILD_ARGS=""
 VERSION=""
+PUSH_DOCKERHUB=1
+PUSH_GHCR=1
 
 while [[ $# -gt 0 ]]; do
 	case "$1" in
@@ -51,6 +55,14 @@ while [[ $# -gt 0 ]]; do
 		-g | --go)
 			GO_VERSION="$2"
 			shift 2
+			;;
+		--nodockerhub)
+			PUSH_DOCKERHUB=0
+			shift
+			;;
+		--noghcr)
+			PUSH_GHCR=0
+			shift
 			;;
 		--supported-targets)
 			echo "Supported targets: $(get_supported_targets)"
@@ -83,6 +95,11 @@ while [[ $# -gt 0 ]]; do
 	esac
 done
 
+if [[ "${PUSH_GHCR}" == "0" && "${PUSH_DOCKERHUB}" == "0" && "${EXTRA_BUILD_ARGS}" == "--push" ]]; then
+	echo "Cannot disable both ghcr and dockerhub with --push"
+	help_message
+fi
+
 TARGETS=${TARGETS:-"current"}
 GO_VERSION=${GO_VERSION:-1.22.7}
 
@@ -107,9 +124,20 @@ fi
 
 DECIPHERED_TARGETS=$(decipher_targets "${TARGETS}")
 
-docker buildx build \
+TAGS=()
+
+if [[ "${PUSH_DOCKERHUB}" == "1" ]]; then
+	TAGS+=(-t swarupsengupta2007/psiphon:"${VERSION#v}")
+	TAGS+=(-t swarupsengupta2007/psiphon:latest)
+fi
+
+if [[ "${PUSH_GHCR}" == "1" ]]; then
+	TAGS+=(-t ghcr.io/swarupsengupta2007/psiphon:"${VERSION#v}")
+	TAGS+=(-t ghcr.io/swarupsengupta2007/psiphon:latest)
+fi
+
+echo docker buildx build \
 				"${DOCKER_BUILD_ARGS[@]}" \
-				-t swarupsengupta2007/psiphon:"${VERSION#v}" \
-				-t swarupsengupta2007/psiphon:latest \
+				"${TAGS[@]}" \
 				--platform "${DECIPHERED_TARGETS}" . \
 				${EXTRA_BUILD_ARGS}
