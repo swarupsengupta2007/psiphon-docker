@@ -3,6 +3,9 @@
 set -euo pipefail
 IFS=$'\n\t'
 
+MYPATH=$(dirname "$(readlink -f "$0")")
+source "${MYPATH}/latest_version.sh"
+
 function help_message() {
 	echo "Usage: $0 [OPTIONS]"
 	echo "Options:"
