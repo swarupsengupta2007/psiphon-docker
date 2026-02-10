@@ -19,6 +19,9 @@ if [ ! -f /config/psiphon.config ]; then
     if [ -n "${EGRESS_REGION}" ]; then
         sed -i -E 's/"EgressRegion"[[:space:]]*:[[:space:]]*"[^"]*"/"EgressRegion": "'${EGRESS_REGION}'"/' /config/psiphon.config
     fi
+    if [ -n "${UPSTREAM_PROXY}" ]; then
+        sed -i -E 's/"UpstreamProxyUrl"[[:space:]]*:[[:space:]]*"[^"]*"/"UpstreamProxyUrl": "'"${UPSTREAM_PROXY}"'"/' /config/psiphon.config
+    fi
 fi
 
 id psiphon > /dev/null 2>&1
