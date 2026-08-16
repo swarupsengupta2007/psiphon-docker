@@ -47,7 +47,6 @@ Build-args available
 
 ## Using docker-compose (recommended) <br>
 ```yaml
-version: "3.5"
 services:
   psiphon:
     image: swarupsengupta2007/psiphon:latest
@@ -62,18 +61,18 @@ services:
     volumes:
       - /path/to/psiphon/config:/config
     ports:
-      - 1080:1080
-      - 8080:8080
-    restart: unless-stopped
+      - 127.0.0.1:1080:1080
+      - 127.0.0.1:8080:8080
+    restart: always
 ```
 
 ## Using docker-cli <br>
 ```bash
 docker run -d                                  \
     --name psiphon                             \
-    --restart=unless-stopped                   \
-    -p 8080:8080                               \
-    -p 1080:1080                               \
+    --restart=always                   \
+    -p 127.0.0.1:8080:8080                               \
+    -p 127.0.0.1:1080:1080                               \
     -e HTTP_PORT=8080                          \
     -e SOCKS_PORT=1080                         \
     -e DEVICE_REGION=IN                        \
