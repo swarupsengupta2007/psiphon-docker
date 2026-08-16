@@ -62,9 +62,9 @@ services:
     volumes:
       - /path/to/psiphon/config:/config
     ports:
-      - 1080:1080
-      - 8080:8080
-    restart: unless-stopped
+      - 127.0.0.1:1080:1080
+      - 127.0.0.1:8080:8080
+    restart: always
 ```
 
 ## Using docker-cli <br>
